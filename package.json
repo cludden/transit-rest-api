@@ -1,6 +1,6 @@
 {
   "name": "transit-rest",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "transit-js rest query parser",
   "main": "index.js",
   "scripts": {
