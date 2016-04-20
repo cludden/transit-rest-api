@@ -1,0 +1,21 @@
+{
+  "name": "transit-rest",
+  "version": "0.0.0",
+  "description": "transit-js rest query parser",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "transit-js",
+    "json-api",
+    "rest"
+  ],
+  "author": "chris ludden",
+  "license": "MIT",
+  "dependencies": {
+    "async": "^1.5.2",
+    "lodash": "^4.11.1",
+    "transit-js": "^0.8.846"
+  }
+}

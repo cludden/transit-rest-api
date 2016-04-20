@@ -1,0 +1,13 @@
+{
+    "node": true,
+    "esnext": true,
+    "predef": [
+        "after",
+        "afterEach",
+        "before",
+        "beforeEach",
+        "context",
+        "describe",
+        "it"
+    ]
+}
