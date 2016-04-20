@@ -6,6 +6,8 @@ const expect = require('chai').expect;
 const httpMocks = require('node-mocks-http');
 const TRAService = require('../../index');
 const util = require('../util');
+const utils = require('../../lib/utils');
+const _ = require('lodash');
 
 const URL = '/api/resource';
 
@@ -48,6 +50,7 @@ describe('basic tests', function() {
                     first: {
                         $startsWith: 'Bob'
                     },
+                    status: ['active', 'pending'],
                     $or: [
                         {
                             createdAt: {
@@ -66,8 +69,23 @@ describe('basic tests', function() {
             },
             options: {
                 filter: {
+                    interceptNormalizedExpression(field, expression, options, cb) {
+                        if (_.isArray(expression)) {
+                            return async.setImmediate(function() {
+                                return cb(null, {$in: expression});
+                            });
+                        } else if (!utils.isExpression(expression)) {
+                            return async.setImmediate(function() {
+                                return cb(null, {$eq: expression});
+                            });
+                        }
+                        return async.setImmediate(function() {
+                            return cb(null, expression);
+                        });
+                    },
                     interceptors: {
-                        first: function(value, cb) {
+                        first: function(value, options, cb) {
+                            console.log(`intercepting 'first': ${JSON.stringify(value)}`);
                             async.setImmediate(function() {
                                 cb(null, value.toLowerCase());
                             });
@@ -77,15 +95,15 @@ describe('basic tests', function() {
             },
             test: function(filter) {
                 // last
-                expect(filter).to.have.property('last', 'smith');
+                expect(filter).to.have.property('last').that.is.an('object').with.property('$eq', 'smith');
 
                 // first
                 expect(filter).to.have.property('first').that.is.an('object');
                 expect(filter.first).to.have.property('$regex');
                 let re = filter.first.$regex;
-                expect(re).to.match('bobby');
-                expect(re).to.not.match('Bobby');
-                expect(re).to.not.match('ricky bobby');
+                expect('bobby').to.match(re);
+                expect('Bobby').to.not.match(re);
+                expect('ricky bobby').to.not.match(re);
 
                 // $or
                 expect(filter).to.have.property('$or').that.is.an('array').with.lengthOf(2);
@@ -107,7 +125,7 @@ describe('basic tests', function() {
                     query: test.parsed
                 });
                 service.parseQueryString(req, test.options || {}, function(err, parsed) {
-                    console.log(err, parsed);
+                    console.log(err, JSON.stringify(parsed));
                     expect(err).to.not.exist;
                     expect(parsed).to.be.an('object').with.property('filter').that.is.an('object');
                     test.test(parsed.filter);
