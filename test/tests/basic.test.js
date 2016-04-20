@@ -294,8 +294,71 @@ describe('basic tests', function() {
         });
 
 
-        it('should allow for field names to be mapped');
-        it('should allow for the interception of field values');
+        it('should allow for field names to be mapped', function(done) {
+            let req = httpMocks.createRequest({
+                method: 'GET',
+                query: util.parseQuery(util.stringifyQuery({
+                    filter: {
+                        'nested.attr': true,
+                        id: [1, 2, 3],
+                        'created-at': {
+                            $lt: new Date('01/01/2016')
+                        }
+                    }
+                }))
+            });
+            service.parseQueryString(req, {
+                filter: {
+                    mapFields: [
+                        function(field) {
+                            if (!/^((?!\.).)*$/g.test(field)) {
+                                return field;
+                            }
+                            return _.camelCase(field);
+                        },
+                        function(field) {
+                            if (field.toLowerCase() === 'id') {
+                                return '_id';
+                            }
+                            return field;
+                        }
+                    ]
+                }
+            }, function(err, parsed) {
+                expect(err).to.not.exist;
+                expect(parsed).to.be.an('object').with.property('filter').that.is.an('object');
+                expect(parsed.filter).to.have.property('nested.attr', true);
+                expect(parsed.filter).to.have.property('_id').that.eql([1,2,3]);
+                expect(parsed.filter).to.have.property('createdAt').that.is.an('object').with.property('$lt').that.is.a('date');
+                done();
+            });
+        });
+
+
+        it('should allow for the interception of field values', function(done) {
+            let req = httpMocks.createRequest({
+                method: 'GET',
+                query: util.parseQuery(util.stringifyQuery({
+                    filter: {
+                        first: 'Bob'
+                    }
+                }))
+            });
+            service.parseQueryString(req, {
+                filter: {
+                    interceptors: {
+                        first(value, options) {
+                            return value.toLowerCase();
+                        }
+                    }
+                }
+            }, function(err, parsed) {
+                expect(err).to.not.exist;
+                expect(parsed).to.be.an('object').with.property('filter').that.is.an('object');
+                expect(parsed.filter).to.have.property('first', 'bob');
+                done();
+            });
+        });
 
 
         it('should fail (400) if the filter cannot be decoded', function(done) {
