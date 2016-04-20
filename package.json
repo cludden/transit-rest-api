@@ -4,7 +4,7 @@
   "description": "transit-js rest query parser",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha test/tests/ --recursive"
   },
   "keywords": [
     "transit-js",
@@ -15,7 +15,13 @@
   "license": "MIT",
   "dependencies": {
     "async": "^1.5.2",
+    "joi": "^8.0.5",
     "lodash": "^4.11.1",
     "transit-js": "^0.8.846"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "^2.4.5",
+    "node-mocks-http": "^1.5.2"
   }
 }
