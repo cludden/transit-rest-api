@@ -7,7 +7,7 @@ const transit = require('./lib/transit');
 const _ = require('lodash');
 
 function TransitRest(options) {
-    this._options = options || {};
+    this._options = options || /* istanbul ignore next */ {};
     this._decoder = transit.createDecoder(this._options);
     this._encoder = transit.createEncoder(this._options);
     this._error = err;
