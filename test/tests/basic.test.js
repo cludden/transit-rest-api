@@ -403,7 +403,171 @@ describe('basic tests', function() {
     });
 
     context('page', function() {
+        let paginationTests = [{
+            query: {
+                size: 10
+            },
+            options: {
+                size: {
+                    default: 20,
+                    min: 1,
+                    max: 100
+                }
+            },
+            test(page) {
+                expect(page).to.be.an('object').with.property('size', 10);
+                expect(page).to.have.property('number', 1);
+                expect(page).to.have.property('skip', 0);
+                expect(page).to.have.property('limit', 10);
+            }
+        }, {
+            query: {
+                cursor: 'some-random?key'
+            },
+            options: {
+                size: {
+                    default: 25,
+                    min: 1,
+                    max: 100
+                }
+            },
+            test(page) {
+                expect(page).to.be.an('object').with.property('size', 25);
+                expect(page).to.have.property('cursor', 'some-random?key');
+            }
+        }, {
+            query: {
+                offset: 2,
+                limit: 10
+            },
+            options: {
+                size: {
+                    default: 70,
+                    min: 1,
+                    max: 100
+                }
+            },
+            test(page) {
+                expect(page).to.be.an('object').with.property('offset', 2);
+                expect(page).to.have.property('limit', 10);
+            }
+        }];
 
+        paginationTests.forEach(function(test) {
+            test.stringified = qs.stringify({page: test.query});
+            test.parsed = qs.parse(test.stringified);
+            test.url = URL + '?' + test.stringified;
+
+            it(`should correctly parse pagination instructions (${test.url})`, function(done) {
+                let req = httpMocks.createRequest({
+                    method: 'GET',
+                    url: test.url,
+                    query: test.parsed
+                });
+                service.parseQueryString(req, {
+                    page: test.options
+                }, function(err, parsed) {
+                    expect(err).to.not.exist;
+                    expect(parsed).to.be.an('object').with.property('page');
+                    test.test(parsed.page);
+                    done();
+                });
+            });
+        });
+
+
+        it(`should include a 'limit' and 'skip' attr if 'size' and 'number' were supplied`, function(done) {
+            let req = httpMocks.createRequest({
+                method: 'GET',
+                query: qs.parse(qs.stringify({
+                    page: {
+                        size: 27,
+                        number: 3
+                    }
+                }))
+            });
+            service.parseQueryString(req, function(err, parsed) {
+                expect(err).to.not.exist;
+                expect(parsed).to.be.an('object').with.property('page');
+                expect(parsed.page).to.have.property('limit', 27);
+                expect(parsed.page).to.have.property('skip', 27 * 2);
+                done();
+            });
+        });
+
+
+        it('should allow the server to supply a default page size', function(done) {
+            let req = httpMocks.createRequest({
+                method: 'GET',
+                query: qs.parse(qs.stringify({
+                    page: {
+                        number: 2
+                    }
+                }))
+            });
+            service.parseQueryString(req, {
+                page: {
+                    size: {
+                        default: 11
+                    }
+                }
+            }, function(err, parsed) {
+                expect(err).to.not.exist;
+                expect(parsed).to.be.an('object').with.property('page');
+                expect(parsed.page).to.have.property('size', 11);
+                expect(parsed.page).to.have.property('number', 2);
+                expect(parsed.page).to.have.property('limit', 11);
+                expect(parsed.page).to.have.property('skip', 11);
+                done();
+            });
+        });
+
+        it('should allow the server to supply a minimum page size', function(done) {
+            let req = httpMocks.createRequest({
+                method: 'GET',
+                query: qs.parse(qs.stringify({
+                    page: {
+                        size: 1
+                    }
+                }))
+            });
+            service.parseQueryString(req, {
+                page: {
+                    size: {
+                        default: 10,
+                        min: 5
+                    }
+                }
+            }, function(err, parsed) {
+                expect(err).to.be.an('object');
+                expect(err).to.have.property('status', 400);
+                expect(err).to.have.property('title', 'Bad Request');
+                done();
+            });
+        });
+
+        it('should allow the server to supply a maximum page size', function(done) {
+            let req = httpMocks.createRequest({
+                method: 'GET',
+                query: qs.parse(qs.stringify({
+                    page: {
+                        size: 100
+                    }
+                }))
+            });
+            service.parseQueryString(req, {
+                page: {
+                    size: {
+                        max: 99
+                    }
+                }
+            }, function(err, parsed) {
+                expect(err).to.be.an('object');
+                expect(err).to.have.property('status', 400);
+                expect(err).to.have.property('title', 'Bad Request');
+                done();
+            });
+        });
     });
 
     context('sort', function() {
