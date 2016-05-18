@@ -144,7 +144,7 @@ describe('basic tests', function() {
             }
         }];
 
-        tests.forEach(function(test, i) {
+        tests.forEach(function(test) {
             test.stringified = util.stringifyQuery(test.query);
             test.parsed = util.parseQuery(test.stringified);
             test.url = URL + '?' + test.stringified;
@@ -214,7 +214,7 @@ describe('basic tests', function() {
             }
         }];
 
-        whitelistTests.forEach(function(test, i) {
+        whitelistTests.forEach(function(test) {
             test.stringified = util.stringifyQuery(test.query);
             test.parsed = util.parseQuery(test.stringified);
             test.url = URL + '?' + test.stringified;
@@ -271,7 +271,7 @@ describe('basic tests', function() {
             }
         }];
 
-        blacklistTests.forEach(function(test, i) {
+        blacklistTests.forEach(function(test) {
             test.stringified = util.stringifyQuery(test.query);
             test.parsed = util.parseQuery(test.stringified);
             test.url = URL + '?' + test.stringified;
@@ -347,7 +347,7 @@ describe('basic tests', function() {
             service.parseQueryString(req, {
                 filter: {
                     interceptors: {
-                        first(value, options) {
+                        first(value) {
                             return value.toLowerCase();
                         }
                     }
@@ -538,7 +538,7 @@ describe('basic tests', function() {
                         min: 5
                     }
                 }
-            }, function(err, parsed) {
+            }, function(err) {
                 expect(err).to.be.an('object');
                 expect(err).to.have.property('status', 400);
                 expect(err).to.have.property('title', 'Bad Request');
@@ -561,7 +561,7 @@ describe('basic tests', function() {
                         max: 99
                     }
                 }
-            }, function(err, parsed) {
+            }, function(err) {
                 expect(err).to.be.an('object');
                 expect(err).to.have.property('status', 400);
                 expect(err).to.have.property('title', 'Bad Request');
